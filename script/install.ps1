@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # QingNZ 探针 Windows 一键安装脚本 (PowerShell 5+)
 #
 #   安装目录: C:\qingnz
@@ -37,9 +37,21 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 
 $download = "https://github.com/$agentrepo/releases/latest/download/$file"
 
-# 可选: 设置 $env:NZ_GH_PROXY 为 GitHub 加速前缀
+# 是否使用 GitHub 加速代理: $env:NZ_GH_PROXY 优先, 否则交互询问 (回车默认不使用)
 if (-not [string]::IsNullOrWhiteSpace($env:NZ_GH_PROXY)) {
-    $download = "$env:NZ_GH_PROXY$download"
+    $ghProxy = $env:NZ_GH_PROXY
+} else {
+    $ghProxy = ""
+    $ans = Read-Host "是否使用 GitHub 加速代理 (https://raw.xiaoy.de/) ? 回车默认不使用 [y/N]"
+    if ($ans -match '^[yY]') {
+        $ghProxy = "https://raw.xiaoy.de/"
+        Write-Host "已启用 GitHub 加速代理: $ghProxy" -BackgroundColor DarkGreen -ForegroundColor White
+    } else {
+        Write-Host "不使用加速代理, 直连 GitHub" -BackgroundColor DarkGreen -ForegroundColor White
+    }
+}
+if (-not [string]::IsNullOrWhiteSpace($ghProxy)) {
+    $download = "$ghProxy$download"
 }
 
 # 已安装则先卸载重装

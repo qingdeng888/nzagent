@@ -12,7 +12,7 @@
 #   ./install.sh uninstall   # 卸载
 #
 # 可选环境变量:
-#   NZ_GH_PROXY   GitHub 下载加速前缀, 例: https://ghproxy.example.com/
+#   NZ_GH_PROXY   GitHub 加速代理前缀 (设置后跳过交互询问), 例: https://raw.xiaoy.de/
 #   其余 NZ_* 变量同官方 agent, 见 https://nezha.wiki
 # ============================================================
 
@@ -20,6 +20,8 @@ NZ_BASE_PATH="/etc/.qingnz"
 NZ_AGENT_PATH="${NZ_BASE_PATH}"
 NZ_BIN_NAME="qingnz"
 NZ_REPO="qingdeng888/nzagent"
+NZ_GH_PROXY_DEFAULT="https://raw.xiaoy.de/"
+GH_PROXY=""
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -130,13 +132,40 @@ env_check() {
     esac
 }
 
-download() {
-    _url="$1"
-    _out="$2"
-
-    if [ -n "$NZ_GH_PROXY" ]; then
-        _url="${NZ_GH_PROXY}${_url}"
+# 代理前缀: NZ_GH_PROXY 环境变量优先, 否则安装时交互询问 (回车默认不使用)
+proxy_setup() {
+    if [ -n "$GH_PROXY" ]; then
+        return
     fi
+    if [ -n "$NZ_GH_PROXY" ]; then
+        GH_PROXY="$NZ_GH_PROXY"
+        return
+    fi
+    printf "是否使用 GitHub 加速代理 (${NZ_GH_PROXY_DEFAULT}) ? 回车默认不使用 [y/N]: "
+    read -r input
+    case $input in
+        [yY][eE][sS] | [yY])
+            GH_PROXY="${NZ_GH_PROXY_DEFAULT}"
+            info "已启用 GitHub 加速代理: ${GH_PROXY}"
+            ;;
+        *)
+            info "不使用加速代理, 直连 GitHub"
+            ;;
+    esac
+}
+
+# 拼接加速代理前缀到 GitHub 下载链接
+gh_url() {
+    if [ -n "$GH_PROXY" ]; then
+        printf "%s%s" "$GH_PROXY" "$1"
+    else
+        printf "%s" "$1"
+    fi
+}
+
+download() {
+    _url="$(gh_url "$1")"
+    _out="$2"
 
     info "Downloading: $_url"
     if command -v wget >/dev/null 2>&1; then
@@ -146,13 +175,16 @@ download() {
     fi
 
     if ! eval "$_cmd"; then
-        err "Download qingnz release failed, check your network connectivity (or set NZ_GH_PROXY)"
+        err "Download qingnz release failed, check your network connectivity (或使用加速代理后重试)"
         exit 1
     fi
 }
 
 install() {
     echo "Installing QingNZ agent..."
+
+    # 决定是否走加速代理 (交互询问, NZ_GH_PROXY 可跳过)
+    proxy_setup
 
     if [ -z "$NZ_SERVER" ]; then
         err "NZ_SERVER should not be empty"
