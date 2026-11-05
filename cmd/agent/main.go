@@ -90,7 +90,7 @@ const (
 	minUpdateInterval = 1440
 	maxUpdateInterval = 2880
 
-	binaryName = "nezha-agent"
+	binaryName = "qingnz"
 )
 
 func setEnv() {
@@ -166,7 +166,7 @@ func preRun(configPath string) error {
 
 func main() {
 	app := &cli.App{
-		Usage:   "哪吒监控 Agent",
+		Usage:   "QingNZ 探针",
 		Version: version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "config", Aliases: []string{"c"}, Usage: "配置文件路径"},
@@ -361,7 +361,7 @@ func runService(action string, path string) {
 		Name:             name,
 		DisplayName:      filepath.Base(executablePath),
 		Arguments:        args,
-		Description:      "哪吒监控 Agent",
+		Description:      "QingNZ 探针",
 		WorkingDirectory: filepath.Dir(executablePath),
 		Option:           winConfig,
 	}
@@ -607,55 +607,14 @@ func doSelfUpdate(config updateConfigTuple, useLocalVersion bool) (exit bool) {
 
 	printf("检查更新: %v", v)
 	var latest *selfupdate.Release
-	switch {
-	case config.useGiteeToUpgrade:
-		updater, erru := selfupdate.NewGiteeUpdater(selfupdate.Config{
-			BinaryName: binaryName,
-		})
-		if erru != nil {
-			printf("更新失败: %v", erru)
-			return
-		}
-		latest, err = updater.UpdateSelf(v, "naibahq/agent")
-	case config.useAtomGitToUpgrade:
-		updater, erru := selfupdate.NewAtomGitUpdater(selfupdate.Config{
-			BinaryName: binaryName,
-		})
-		if erru != nil {
-			printf("更新失败: %v", erru)
-			return
-		}
-		latest, err = updater.UpdateSelf(v, "naiba/nezha-agent")
-	case monitor.CachedCountryCode() == "cn":
-		if rand.Intn(2) == 0 {
-			updater, erru := selfupdate.NewGiteeUpdater(selfupdate.Config{
-				BinaryName: binaryName,
-			})
-			if erru != nil {
-				printf("更新失败: %v", erru)
-				return
-			}
-			latest, err = updater.UpdateSelf(v, "naibahq/agent")
-		} else {
-			updater, erru := selfupdate.NewAtomGitUpdater(selfupdate.Config{
-				BinaryName: binaryName,
-			})
-			if erru != nil {
-				printf("更新失败: %v", erru)
-				return
-			}
-			latest, err = updater.UpdateSelf(v, "naiba/nezha-agent")
-		}
-	default:
-		updater, erru := selfupdate.NewUpdater(selfupdate.Config{
-			BinaryName: binaryName,
-		})
-		if erru != nil {
-			printf("更新失败: %v", erru)
-			return
-		}
-		latest, err = updater.UpdateSelf(v, "nezhahq/agent")
+	updater, erru := selfupdate.NewUpdater(selfupdate.Config{
+		BinaryName: binaryName,
+	})
+	if erru != nil {
+		printf("更新失败: %v", erru)
+		return
 	}
+	latest, err = updater.UpdateSelf(v, "qingdeng888/nzagent")
 
 	if err != nil {
 		printf("更新失败: %v", err)

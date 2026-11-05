@@ -87,14 +87,14 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-        run: zip -jr dist/nezha-agent_${GOOS}_${GOARCH}.zip dist/*/*
+        run: zip -jr dist/qingnz_${GOOS}_${GOARCH}.zip dist/*/*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: nezha-agent_${{ matrix.goos }}_${{ matrix.goarch }}
+          name: qingnz_${{ matrix.goos }}_${{ matrix.goarch }}
           path: |
-            ./dist/nezha-agent_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+            ./dist/qingnz_${{ matrix.goos }}_${{ matrix.goarch }}.zip
 
   release:
     runs-on: ubuntu-latest
@@ -117,12 +117,3 @@ jobs:
             checksums.txt
             assets/*/*.zip
           generate_release_notes: true
-
-      - name: Trigger sync
-        env:
-          GH_REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
-          GH_DEBUG: api
-        run: |
-          gh workflow run sync-release.yml
-          gh workflow run sync-release-atomgit.yml
